@@ -473,13 +473,55 @@ class HatefulMemesModel(pl.LightningModule):
         submission_frame.label = submission_frame.label.astype(int)
         return submission_frame
 
-data_dir = "/home/nhd7682/hateful_memes"
+
+def fgsm_attack(model, loss, test_path, eps) :
+
+    attack_success = 0
+    original_success = 0
+    test_dataset = model._build_dataset(test_path)
+    test_frame = pd.DataFrame(
+        index=test_dataset.samples_frame.id,
+        columns=["proba", "label"]
+    )
+    test_dataloader = torch.utils.data.DataLoader(
+        test_dataset, 
+        shuffle=False, 
+        batch_size= 4, 
+        num_workers= 16)
+    
+    for batch in tqdm(test_dataloader, total=len(test_dataloader)):
+
+            batch["image"], batch["text"], batch["label"] = batch["image"].to("cuda"), batch["text"].to("cuda"), batch["label"].to("cuda")
+            batch["image"].requires_grad =  True
+            preds, _ = model.eval().to("cuda")(batch["text"], batch["image"])
+            # preds = preds.max(1, keepdim=True)[1]
+            preds = torch.nn.functional.softmax(preds)
+
+            model.zero_grad()
+            # print(preds, batch["label"])
+            l = torch.nn.CrossEntropyLoss()
+            output = l(preds,batch["label"]).to("cuda")
+            output.backward()
+            
+            batch_attack_images = batch["image"] + eps*batch["image"].grad.sign()
+            batch_attack_images = torch.clamp(batch_attack_images, 0, 1)    
+
+            perturbed_preds, _ = model.eval().to("cuda")(batch["text"], batch_attack_images) 
+            perturbed_preds = perturbed_preds.max(1, keepdim=True)[1]
+            for i, p in enumerate(preds.max(1, keepdim=True)[1]):
+                if p == batch["label"][i]:
+                    original_success += 1
+                    if perturbed_preds[i] != batch["label"][i]:
+                        attack_success += 1
+            
+    return ((attack_success/len(test_dataloader))*100)
+
+data_dir = Path.cwd().parent / "ml-cybersec" / "datasets" / "hateful_memes" / "defaults" / "annotations"
 print(data_dir)
-data_dir = Path.cwd()/ "hateful_memes"
 img_tar_path = data_dir / "img.tar.gz"
 train_path = data_dir / "train.jsonl"
-dev_path = data_dir / "dev_seen.jsonl"
-test_path = data_dir / "test_seen.jsonl"
+dev_path = data_dir / "test_unseen.jsonl"
+test_path = data_dir / "test_unseen.jsonl"
 
 train_samples_frame = pd.read_json(train_path, lines=True)
 train_samples_frame.label.value_counts()
@@ -507,16 +549,21 @@ hparams = {
     "early_stop_patience": 6,
 }
 if args.load:
-    load_path = Path.cwd()/hparams.get("output_path")/"epoch=1-step=190-v2.ckpt"
+    load_path = Path.cwd()/hparams.get("output_path")/"epoch=10-step=1045.ckpt"
     isExist = Path(load_path).is_file()
     if not isExist:
         raise Exception(f"No file exists at the path{load_path}, maybe you are missing saved model. Try training by running the script without load flag")
     hateful_memes_model = HatefulMemesModel.load_from_checkpoint(load_path)
-    print(f"Model loaded from {load_path}")
-    hateful_memes_model.eval()
+    
     # TODO: Implement image perturbation attacks here
     #       Implement text perturbation attacks here
     #       Implement adversarial retraining here
+
+    eps = 50/255
+    loss = torch.nn.CrossEntropyLoss
+    print("Starting")
+    print(fgsm_attack(hateful_memes_model, loss, test_path, eps))
+
 else:
     hateful_memes_model = HatefulMemesModel(hparams=hparams)
     hateful_memes_model.fit()
@@ -530,7 +577,11 @@ else:
     data = pd.read_json(test_path, lines=True)
     accuracy = 0
     row,col = df.shape
+    comp = []
     for csv_row in range(row):
         if(df.label[csv_row] == data.label[csv_row]):
             accuracy+=1
-    print("%.2f%%"%((accuracy/1000) * 100) )
+            comp.append(csv_row)
+    print("Accuracy: %.2f%%"%((accuracy/1000) * 100) )
+
+
