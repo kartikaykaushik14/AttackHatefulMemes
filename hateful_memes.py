@@ -473,6 +473,37 @@ class HatefulMemesModel(pl.LightningModule):
         submission_frame.label = submission_frame.label.astype(int)
         return submission_frame
 
+def text_perturb_qm(model, test_path) :
+    attack_success = 0
+    original_success = 0
+    test_dataset = model._build_dataset(test_path)
+    test_frame = pd.DataFrame(
+        index=test_dataset.samples_frame.id,
+        columns=["proba", "label"]
+    )
+    test_dataloader = torch.utils.data.DataLoader(
+        test_dataset,
+        shuffle=False,
+        batch_size= 4,
+        num_workers= 16)
+
+    for batch in tqdm(test_dataloader, total=len(test_dataloader)):
+
+            batch["image"], batch["text"], batch["label"] = batch["image"].to("cuda"), batch["text"].to("cuda"), batch["label"].to("cuda")
+            perturbed_text = batch["text"] + "?"
+            preds, _ = model.eval().to("cuda")(batch["text"], batch["image"])
+            # preds = preds.max(1, keepdim=True)[1]
+            preds = torch.nn.functional.softmax(preds)
+
+            perturbed_preds, _ = model.eval().to("cuda")(perturbed_text, batch["image"])
+            perturbed_preds = perturbed_preds.max(1, keepdim=True)[1]
+            for i, p in enumerate(preds.max(1, keepdim=True)[1]):
+                if p == batch["label"][i]:
+                    original_success += 1
+                    if perturbed_preds[i] != batch["label"][i]:
+                        attack_success += 1
+
+    return ((attack_success/len(test_dataloader))*100)
 
 def fgsm_attack(model, loss, test_path, eps) :
 
@@ -562,7 +593,9 @@ if args.load:
     eps = 50/255
     loss = torch.nn.CrossEntropyLoss
     print("Starting")
-    print(fgsm_attack(hateful_memes_model, loss, test_path, eps))
+#     print(fgsm_attack(hateful_memes_model, loss, test_path, eps))
+    print(text_perturb_qm(hateful_memes_model, test_path))
+
 
 else:
     hateful_memes_model = HatefulMemesModel(hparams=hparams)
