@@ -17,6 +17,13 @@ import pandas_path  # Path style access for pandas
 from tqdm import tqdm
 import torchvision.transforms as T
 
+parser = argparse.ArgumentParser(
+                    prog = 'hateful_memes',
+                    description = 'Train multimodal architecture and generate adversarial attacks and then retrains'
+                    )
+parser.add_argument('--load','-l',action='store_true', default = True, help="loads a model and run attack scripts" )
+args = parser.parse_args()
+
 class HatefulMemesDataset(torch.utils.data.Dataset):
     """Uses jsonl data to preprocess and serve 
     dictionary of multimodal tensors for model input.
@@ -466,5 +473,42 @@ class HatefulMemesModel(pl.LightningModule):
         submission_frame.proba = submission_frame.proba.astype(float)
         submission_frame.label = submission_frame.label.astype(int)
         return submission_frame
+
+
+data_dir = Path.cwd().parent / "datasets" / "hateful_memes" / "defaults" / "annotations"
+print(data_dir)
+img_tar_path = data_dir / "img.tar.gz"
+train_path = data_dir / "train.jsonl"
+dev_path = data_dir / "test_unseen.jsonl"
+test_path = data_dir / "test_unseen.jsonl"
+adv_train_path = "adv_retrain.jsonl"
+
+
+adv_hparams = {
+    
+    # Required hparams
+    "train_path": adv_train_path,
+    "dev_path": test_path,
+    "img_dir": data_dir,
+    
+    # Optional hparams
+    "embedding_dim": 150,
+    "language_feature_dim": 300,
+    "vision_feature_dim": 300,
+    "fusion_output_size": 256,
+    "output_path": "model-outputs",
+    "dev_limit": None,
+    "lr": 0.00005,
+    "max_epochs": 30,
+    "n_gpu": 1,
+    "batch_size": 4,
+    # allows us to "simulate" having larger batches 
+    "accumulate_grad_batches": 16,
+    "early_stop_patience": 6,
+}
+
+print("Starting")
+adv_model = HatefulMemesModel(hparams=adv_hparams)
+adv_model.fit()
 
 

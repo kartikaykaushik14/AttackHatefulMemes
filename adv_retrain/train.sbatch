@@ -5,8 +5,8 @@
 #SBATCH --cpus-per-task=16                
 #SBATCH --time=2:00:00
 #SBATCH --mem=64GB
-#SBATCH --job-name=eps10
-#SBATCH --output=eps10.out
+#SBATCH --job-name=adv_retrain
+#SBATCH --output=adv_retrain.out
 #SBATCH --gres=gpu:1
 
 
@@ -14,4 +14,4 @@ module purge
 module load anaconda3/2020.07
 eval "$(conda shell.bash hook)"
 conda activate memes
-python attack.py
+python model.py

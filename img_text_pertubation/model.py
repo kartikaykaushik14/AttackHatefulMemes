@@ -17,12 +17,6 @@ import pandas_path  # Path style access for pandas
 from tqdm import tqdm
 import torchvision.transforms as T
 
-parser = argparse.ArgumentParser(
-                    prog = 'hateful_memes',
-                    description = 'Train multimodal architecture and generate adversarial attacks and then retrains'
-                    )
-parser.add_argument('--load','-l',action='store_true', default = True, help="loads a model and run attack scripts" )
-args = parser.parse_args()
 
 class HatefulMemesDataset(torch.utils.data.Dataset):
     """Uses jsonl data to preprocess and serve 
