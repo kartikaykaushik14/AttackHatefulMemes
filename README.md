@@ -10,6 +10,6 @@ To run the code on a conda environment, you need to create an environment with p
 
 To run a attack in any of the folders above, you can use the command python attack.py
 
-Make sure you download the perturbed images from here and put in the folder called annotations inside the original dataset.
+Make sure you download the perturbed images from [here](https://drive.google.com/drive/folders/19Cgq2q-csOgrsa0bAUcaeEOYvlekKzM2) and put in the folder called annotations inside the original dataset.
 
 Make sure you have the correct path in line [63](https://github.com/kartikaykaushik14/AttackHatefulMemes/blob/main/img_perturbation/attack.py#L63) and [67](https://github.com/kartikaykaushik14/AttackHatefulMemes/blob/main/img_perturbation/attack.py#L67) in all the attack.py files.
