@@ -12,4 +12,4 @@ To run a attack in any of the folders above, you can use the command python atta
 
 Make sure you download the perturbed images from here and put in the folder called annotations inside the original dataset.
 
-Make sure you have the correct path in line [63](https://github.com/kartikaykaushik14/AttackHatefulMemes/blob/main/img_perturbation/attack.py#L63) and [67] (https://github.com/kartikaykaushik14/AttackHatefulMemes/blob/main/img_perturbation/attack.py#L67) in all the attack.py files.
+Make sure you have the correct path in line [63](https://github.com/kartikaykaushik14/AttackHatefulMemes/blob/main/img_perturbation/attack.py#L63) and [67](https://github.com/kartikaykaushik14/AttackHatefulMemes/blob/main/img_perturbation/attack.py#L67) in all the attack.py files.
