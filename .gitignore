@@ -1,6 +1,4 @@
 # ignore all hpc related files
-*.out
-*.sbatch
 *.csv
 *.ckpt
 # ignore the dataset
