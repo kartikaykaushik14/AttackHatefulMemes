@@ -56,7 +56,7 @@ def img_fgsm_attack(model, test_path, eps) :
         batch_attack_images = inverseNorm(batch["image"]) + eps*batch["image"].grad.sign()
         batch_attack_images = torch.clamp(batch_attack_images, 0, 1) 
         for i in range(4):
-          torchvision.utils.save_image(batch_attack_images[i], '/scratch/mmk9369/ml-cybersec/datasets/hateful_memes/defaults/annotations/perturbed/{}.png'.format((batch['id'][i]).item()))
+            torchvision.utils.save_image(batch_attack_images[i], '/scratch/mmk9369/ml-cybersec/datasets/hateful_memes/defaults/annotations/perturbed/{}.png'.format((batch['id'][i]).item()))
 
 
 data_dir = Path.cwd().parent / "datasets" / "hateful_memes" / "defaults" / "annotations"

@@ -37,6 +37,7 @@ def img_fgsm_attack(model, test_path, perturbed_test_path) :
         batch_size= 4,
         num_workers= 16)
     
+    loader = iter(perturbed_test_dataloader)
     for batch in tqdm(test_dataloader, total=len(test_dataloader)):
 
         batch["image"], batch["text"], batch["label"] = batch["image"].to("cuda"), batch["text"].to("cuda"), batch["label"].to("cuda")
@@ -44,7 +45,7 @@ def img_fgsm_attack(model, test_path, perturbed_test_path) :
         preds, _ = model.eval().to("cuda")(batch["text"], batch["image"])
         preds = preds.max(1, keepdim=True)[1]
 
-        batch2 = next(iter(perturbed_test_dataloader))
+        batch2 = next(loader)
         batch2["text"], batch2["image"] =  batch2["text"].to("cuda"), batch2["image"] .to("cuda")
 
         perturbed_preds, _ = model.eval().to("cuda")(batch2["text"], batch2["image"])
