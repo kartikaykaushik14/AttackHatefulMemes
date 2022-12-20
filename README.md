@@ -6,3 +6,8 @@ To run the code on a conda environment, you need to create an environment with p
 3. To run text perturbations, run the code in the text_perturbation folder.
 4. To run text and image perturbations, run the code in the text_perturbation folder.
 5. Adversarial retraining can be done through the code in adv_retrain folder.
+
+
+To run a attack in any of the folders above, you can use the command python attack.py
+
+Make sure you download the perturbed images from here and put in the img_perturbation folder before running a attack.
